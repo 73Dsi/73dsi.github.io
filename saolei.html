@@ -1,0 +1,189 @@
+
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+							<style>
+								body {
+									background-color: white; /* Ensure the iframe has a white background */
+								}
+
+								
+							</style>
+                        </head>
+                        <body>
+                            <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>扫雷</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding-top: 30px;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 外部容器：负责在屏幕太小时进行缩放 */
+        .scaler {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform-origin: top center;
+        }
+
+        /* 模拟 Mathematica 的 Framed 外框 */
+        .grid-frame {
+            background: white;
+            padding: 1px;
+            border: 1px solid #999;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .grid {
+            display: grid;
+            /* 严格锁定 9列，每列 45px */
+            grid-template-columns: repeat(9, 45px);
+            grid-template-rows: repeat(9, 45px);
+            background-color: #d3d3d3; /* 框线颜色 */
+            gap: 1px; 
+        }
+
+        .cell {
+            width: 45px;
+            height: 45px;
+            background-color: rgb(242, 242, 242); /* colorOff */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            box-sizing: border-box;
+            border: none;
+            outline: none;
+        }
+
+        /* 点击状态 */
+        .cell.is-on {
+            background-color: rgb(255, 204, 51); /* colorOn */
+        }
+
+        /* 计数文本颜色 */
+        .count-red { color: red; }
+        .count-gray { color: #555; }
+
+        /* 底部统计栏 */
+        .info-panel {
+            margin-top: 10px;
+            width: 415px; /* 与网格大致等宽 */
+            height: 40px;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: blue;
+            font-weight: bold;
+            font-size: 14px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="scaler" id="mainScaler">
+        <div class="grid-frame">
+            <div id="grid" class="grid"></div>
+        </div>
+
+        <div class="info-panel" id="counter">
+            总点亮格子数：0
+        </div>
+    </div>
+
+    <script>
+        const size = 9;
+        let gridState = Array(size).fill().map(() => Array(size).fill(false));
+
+        // 核心逻辑：自动适配手机屏幕宽度
+        function adjustScale() {
+            const scaler = document.getElementById('mainScaler');
+            const screenWidth = window.innerWidth;
+            const gridWidth = 420; // 网格实际物理宽度约415-420px
+            
+            if (screenWidth < gridWidth) {
+                const ratio = (screenWidth - 20) / gridWidth;
+                scaler.style.transform = `scale(${ratio})`;
+            } else {
+                scaler.style.transform = `scale(1)`;
+            }
+        }
+
+        function getSurroundingCount(r, c) {
+            let count = 0;
+            for (let i = r - 1; i <= r + 1; i++) {
+                for (let j = c - 1; j <= c + 1; j++) {
+                    if (i >= 0 && i < size && j >= 0 && j < size) {
+                        if (gridState[i][j]) count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        function render() {
+            const gridElement = document.getElementById('grid');
+            gridElement.innerHTML = '';
+            let totalOn = 0;
+
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    const isOn = gridState[i][j];
+                    if (isOn) totalOn++;
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell' + (isOn ? ' is-on' : '');
+                    
+                    if (!isOn) {
+                        const cnt = getSurroundingCount(i, j);
+                        if (cnt > 0) {
+                            const span = document.createElement('span');
+                            span.innerText = cnt;
+                            span.className = cnt > 2 ? 'count-red' : 'count-gray';
+                            cell.appendChild(span);
+                        }
+                    }
+
+                    cell.onclick = () => {
+                        gridState[i][j] = !gridState[i][j];
+                        render();
+                    };
+
+                    gridElement.appendChild(cell);
+                }
+            }
+            document.getElementById('counter').innerText = `总点亮格子数：${totalOn}`;
+        }
+
+        window.addEventListener('resize', adjustScale);
+        adjustScale();
+        render();
+    </script>
+</body>
+</html>
+
+							<script>
+                            	
+							</script>
+                        </body>
+                        </html>
+                    
