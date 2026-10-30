@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- build: 2026-10-31 02:25:40 -->
+<!-- build: 2026-10-31 02:39:47 -->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -181,6 +181,17 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-ra
   color:#f2b26a;background:rgba(242,162,74,.12);border:1px solid rgba(242,162,74,.42);
   border-radius:999px;padding:4px 12px;pointer-events:none}
 @media (max-width:980px) and (orientation:portrait){ #rotate{display:inline-block} }
+#fs{position:fixed;z-index:8;right:34px;bottom:58px;width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-size:15px;line-height:1;cursor:pointer;
+  color:#bfe3f2;font-family:inherit;background:rgba(8,17,26,.72);border:1px solid var(--line);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#fs:hover{color:#ffd0a0;border-color:rgba(242,162,74,.5)}
+@media (max-width:980px) and (orientation:portrait){
+  #fs{right:12px;bottom:118px;width:32px;height:32px;font-size:14px}
+}
+@media (orientation:landscape) and (max-height:560px) and (max-width:1100px){
+  #fs{left:12px;bottom:12px;right:auto;width:30px;height:30px;font-size:13px}
+}
 #tip{position:fixed;right:34px;bottom:30px;z-index:6;font-size:9.5px;color:#5d7d8f;letter-spacing:.18em}
 
 #boot{position:fixed;inset:0;z-index:50;background:#04080e;display:flex;flex-direction:column;
@@ -297,6 +308,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-ra
 </div>
 
 <div id="card"></div>
+<button id="fs" title="全屏 / 退出全屏">⛶</button>
 <div id="tip">拖拽旋转 · 滚轮缩放 · 点击洋流</div>
 
 <div id="boot"><div class="ring"></div><span>正在生成海洋</span></div>
@@ -1943,11 +1955,32 @@ const APP = (window.APP = {});
   /* ---------------- 指针 ---------------- */
   let dragging = false, px = 0, py = 0, moved = 0;
 
+  // 双指缩放（手机）
+  const touches = new Map();
+  let pinchDist = 0;
   canvas.addEventListener('pointerdown', (e) => {
+    touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      const [a, b] = [...touches.values()];
+      pinchDist = Math.hypot(a.x - b.x, a.y - b.y);
+      dragging = false;
+      return;
+    }
     dragging = true; px = e.clientX; py = e.clientY; moved = 0;
-    canvas.setPointerCapture(e.pointerId);
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
   });
   canvas.addEventListener('pointermove', (e) => {
+    if (touches.has(e.pointerId)) touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (touches.size === 2) {
+      const [a, b] = [...touches.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchDist > 0 && d > 0) {
+        const v = VIEWS[APP.S.mode];
+        viewT.radius = APP.clamp(viewT.radius * (pinchDist / d), v.min, v.max);
+      }
+      pinchDist = d;
+      return;
+    }
     if (!dragging) { if (APP.onHover) APP.onHover(e); return; }
     const dx = e.clientX - px, dy = e.clientY - py;
     px = e.clientX; py = e.clientY;
@@ -1958,8 +1991,15 @@ const APP = (window.APP = {});
     if (v.range != null) viewT.theta = APP.clamp(viewT.theta, -v.range, v.range);
   });
   canvas.addEventListener('pointerup', (e) => {
+    touches.delete(e.pointerId);
+    if (touches.size < 2) pinchDist = 0;
     dragging = false;
-    if (moved < 7 && APP.onPick) APP.onPick(e);
+    if (moved < 7 && touches.size === 0 && APP.onPick) APP.onPick(e);
+  });
+  canvas.addEventListener('pointercancel', (e) => {
+    touches.delete(e.pointerId);
+    if (touches.size < 2) pinchDist = 0;
+    dragging = false;
   });
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
@@ -2307,6 +2347,13 @@ const APP = (window.APP = {});
   };
 
   /* ---------------- resize ---------------- */
+  APP.onResize = function () {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    if (A.mapEnter) A.mapEnter();
+    if (A.monsoonEnter) A.monsoonEnter();
+  };
   window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
@@ -4027,12 +4074,34 @@ const APP = (window.APP = {});
     zoomAt(e.clientX, e.clientY, k2);
   }, { passive: false });
 
+  // 双指缩放
+  const pinchPts = new Map();
+  let pinchD = 0;
   cv.addEventListener('pointerdown', (e) => {
     if (!(S.mode === 'globe' && S.gview !== 'globe')) return;
+    pinchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinchPts.size === 2) {
+      const [a, b] = [...pinchPts.values()];
+      pinchD = Math.hypot(a.x - b.x, a.y - b.y);
+      drag = null;
+      return;
+    }
     drag = { x: e.clientX, y: e.clientY }; moved = 0;
   });
   cv.addEventListener('pointermove', (e) => {
     if (S.mode !== 'globe' || S.gview === 'globe') return;
+    if (pinchPts.has(e.pointerId)) pinchPts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pinchPts.size === 2) {
+      const [a, b] = [...pinchPts.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      if (pinchD > 0 && d > 0) {
+        const k2 = Math.max(1, Math.min(5, Z.k * (d / pinchD)));
+        zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, k2);
+        moved = 99;                       // 双指后不要触发点选
+      }
+      pinchD = d;
+      return;
+    }
     if (drag && Z.k > 1) {
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
       moved += Math.abs(dx) + Math.abs(dy);
@@ -4052,8 +4121,11 @@ const APP = (window.APP = {});
     cv.style.cursor = id ? 'pointer' : 'default';
   });
   cv.addEventListener('pointerup', (e) => {
+    pinchPts.delete(e.pointerId);
+    if (pinchPts.size < 2) pinchD = 0;
     const wasDrag = moved > 6;
     drag = null; moved = 0;
+    if (pinchPts.size > 0) return;
     if (S.mode !== 'globe' || S.gview === 'globe') { return; }
     if (wasDrag) return;
     const id = hit(e);
@@ -4061,6 +4133,7 @@ const APP = (window.APP = {});
   });
   cv.addEventListener('dblclick', () => { if (Z.k > 1) A.mapZoom(); });
 
+  A.mapZoomK = () => Z.k;      // 供调试/测试读取当前缩放
   A.map2d = {
     update() { if (S.mode === 'globe' && S.gview !== 'globe') draw(); },
     enter() { layout(); draw(); },
@@ -4439,6 +4512,25 @@ const APP = (window.APP = {});
     if (text != null) e.textContent = text;
     return e;
   }
+
+  /* ---------------- 全屏 ---------------- */
+  (function () {
+    const btn = document.getElementById('fs');
+    if (!btn) return;
+    const el = document.documentElement;
+    const isFs = () => document.fullscreenElement || document.webkitFullscreenElement;
+    const sync = () => { btn.textContent = isFs() ? '⤢' : '⛶'; };
+    btn.onclick = () => {
+      if (isFs()) {
+        (document.exitFullscreen || document.webkitExitFullscreen || function () {}).call(document);
+      } else {
+        (el.requestFullscreen || el.webkitRequestFullscreen || function () {}).call(el);
+      }
+    };
+    document.addEventListener('fullscreenchange', () => { sync(); if (A.onResize) A.onResize(); });
+    document.addEventListener('webkitfullscreenchange', () => { sync(); if (A.onResize) A.onResize(); });
+    sync();
+  })();
 
   /* ---------------- 模式切换 ---------------- */
   const MODES = [
