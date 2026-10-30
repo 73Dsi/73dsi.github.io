@@ -14,6 +14,10 @@ html,body{height:100%;overflow:hidden;background:var(--bg)}
 body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,-apple-system,sans-serif;
   color:var(--txt);-webkit-font-smoothing:antialiased;user-select:none}
 canvas{position:fixed;inset:0;display:block;touch-action:none}
+#flatmap{display:none;z-index:1}
+body.flat #c{display:none}
+body.flat #flatmap{display:block}
+body.flat #labels{display:none}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
   background:radial-gradient(ellipse at 50% 45%,transparent 45%,rgba(0,0,0,.55) 100%)}
 #labels{position:fixed;inset:0;pointer-events:none;z-index:3;overflow:hidden}
@@ -100,11 +104,20 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-ra
   background:rgba(8,18,28,.55);border:1px solid var(--line);letter-spacing:.03em;
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);transition:opacity .3s}
 
-#card{position:fixed;left:auto;right:34px;bottom:100px;width:286px;z-index:7;padding:16px;border-radius:16px;
-  background:rgba(10,22,32,.8);border:1px solid var(--line);
+#card{position:fixed;left:auto;right:34px;bottom:96px;width:290px;z-index:7;padding:0;border-radius:14px;
+  background:rgba(10,22,32,.82);border:1px solid var(--line);overflow:hidden;
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   opacity:0;transform:translateY(10px);pointer-events:none;transition:.3s}
 #card.show{opacity:1;transform:none;pointer-events:auto}
+.cmini{display:flex;align-items:center;gap:8px;padding:11px 13px;cursor:pointer}
+.cmini b{font-size:12.5px;font-weight:500;flex:1;letter-spacing:.04em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.cmini em{font-style:normal;font-size:9.5px;color:var(--dim);letter-spacing:.05em;white-space:nowrap}
+.cmini .ctog{background:none;border:none;color:var(--dim);cursor:pointer;font-size:10px;
+  line-height:1;padding:2px;transition:transform .25s}
+#card.open .cmini .ctog{transform:rotate(180deg)}
+.cbody{display:none;padding:0 14px 14px}
+#card.open .cbody{display:block}
 .card-top{display:flex;align-items:center;gap:8px}
 .card-top h4{font-size:13.5px;font-weight:500;flex:1;letter-spacing:.05em}
 .card-top .dot{width:7px;height:7px;border-radius:50%;flex:none}
@@ -163,6 +176,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-ra
 </head>
 <body>
 <canvas id="c"></canvas>
+<canvas id="flatmap"></canvas>
 <div id="labels"></div>
 
 <header id="top">
@@ -191,6 +205,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border:none;border-ra
 <script>/*__DENS__*/</script>
 <script>/*__COMP__*/</script>
 <script>/*__GLOBE__*/</script>
+<script>/*__MAP__*/</script>
 <script>/*__UI__*/</script>
 </body>
 </html>

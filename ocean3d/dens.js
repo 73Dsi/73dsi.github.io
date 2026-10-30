@@ -3,6 +3,9 @@
   const T = THREE, A = window.APP, S = A.S;
   const G = A.group('dens');
 
+  /* ---------- 水箱 ---------- */
+  A.tank(140, 70, 34, 0, -23, 0, 0x8f7fd8);
+
   const ZD = 26;          // 剖面厚度
   let seabed = null;
 

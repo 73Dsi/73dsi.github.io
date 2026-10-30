@@ -8,6 +8,7 @@ parts = {
   'DENS':  'dens.js',
   'COMP':  'comp.js',
   'GLOBE': 'globe.js',
+  'MAP':   'map2d.js',
   'UI':    'ui.js',
 }
 for k, p in parts.items():

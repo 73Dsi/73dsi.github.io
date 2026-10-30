@@ -3,8 +3,12 @@
   const T = THREE, A = window.APP, S = A.S;
   const G = A.group('wind');
 
+  /* ---------- 水箱 ---------- */
+  A.tank(58, 64, 58, 0, -25, 0, 0x63b9d6);
+  A.waterVolume(56, 56, 56, 0, -28, 0, 0x1a6c8e);
+
   /* ---------- 海面 ---------- */
-  const oceanGeo = new T.PlaneGeometry(260, 260, 120, 120);
+  const oceanGeo = new T.PlaneGeometry(56, 56, 80, 80);
   oceanGeo.rotateX(-Math.PI / 2);
 
   const oceanMat = new T.ShaderMaterial({
@@ -72,7 +76,7 @@
 
   /* ---------- 深处网格 ---------- */
   [-30, -56].forEach((y, i) => {
-    const gh = new T.GridHelper(120, 12, 0x2a8ea8, 0x0e3a4a);
+    const gh = new T.GridHelper(52, 8, 0x2a8ea8, 0x0e3a4a);
     gh.position.y = y;
     gh.material.transparent = true;
     gh.material.opacity = 0.18 - i * 0.06;
@@ -85,7 +89,7 @@
   const LAYERS = [0, -13, -26, -39, -52];
   const PER = 34;
   const N = LAYERS.length * PER;
-  const HALF = 40;
+  const HALF = 26;
 
   const px = new Float32Array(N), pz = new Float32Array(N);
   const vx = new Float32Array(N), vz = new Float32Array(N);
@@ -165,8 +169,8 @@
   arcLine.renderOrder = 9;
   G.add(arcLine);
 
-  const lWind = A.label('风（信风）', 'accent'); lWind.off = [-24, 22];
-  lWind.pos.set(-34, 2, -14);
+  const lWind = A.label('风（信风）', 'accent'); lWind.off = [-10, -20];
+  lWind.pos.set(-24, 4, -16);
   const lFlow = A.label('表层流速 · 偏 45°', 'green'); lFlow.off = [70, 10];
   const lNet = A.label('净输送 · 偏 90°', 'amber'); lNet.off = [0, -26];
   const lCol = A.label('埃克曼螺旋', 'amber'); lCol.off = [-96, 6];
@@ -220,7 +224,7 @@
       const y = LAYERS[i], sp = speedAt(i), an = angleAt(i);
       _o.set(COL.x, y, COL.z);
       _d.set(Math.cos(an), 0, Math.sin(an));
-      const len = 5.5 + sp * 3.0;
+      const len = 5.0 + sp * 2.6;
       ekArrows[i].setArrow(_o, _d, len, 0.4);
       E[i * 3] = COL.x + Math.cos(an) * len;
       E[i * 3 + 1] = y;
@@ -231,11 +235,11 @@
     lDeep.pos.set(COL.x, -48, COL.z);
 
     /* 风箭头 */
-    const wl = 12 + S.wind * 0.6;
+    const wl = 9 + S.wind * 0.35;
     for (let i = 0; i < windArrows.length; i++) {
       const a = windArrows[i];
-      const x = -48 + ((i * 14 + S.t * 9) % 92);
-      _o.set(x, 4 + Math.sin(S.t * 1.2 + i) * 0.4, -24 + (i % 3) * 9);
+      const x = -26 + ((i * 9 + S.t * 8) % 52);
+      _o.set(x, 4 + Math.sin(S.t * 1.2 + i) * 0.4, -20 + (i % 3) * 9);
       _d.set(1, 0, 0);
       a.setArrow(_o, _d, wl, 0.30);
     }
