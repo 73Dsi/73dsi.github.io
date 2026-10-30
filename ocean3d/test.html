@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- build: 2026-10-31 02:48:43 -->
+<!-- build: 2026-10-31 02:53:29 -->
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
@@ -3604,6 +3604,15 @@ const APP = (window.APP = {});
       const okFilter = A.curVisible(it.c) && A.curMatch(it.c);
       const d = (it.mid.x * cp.x + it.mid.y * cp.y + it.mid.z * cp.z) / (it.mid.length() * cl);
       it.lab.on = inGlobe && okFilter && d > 0.52;
+    });
+
+    // 渔场标签同样只显示地球正面（被地球挡住的不要露出来）
+    const fishOn = !!S.overlay && inGlobe;
+    fishItems.forEach((it) => {
+      const p = it.lab.pos;
+      const len = Math.sqrt(p.x * p.x + p.y * p.y + p.z * p.z) || 1;
+      const d = (p.x * cp.x + p.y * cp.y + p.z * cp.z) / (len * cl);
+      it.lab.on = fishOn && d > 0.52;
     });
   }
 
